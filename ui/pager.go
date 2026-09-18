@@ -427,7 +427,18 @@ func glamourRender(m pagerModel, markdown string) (string, error) {
 	}
 
 	isCode := !utils.IsMarkdownFile(m.currentDocument.Note)
-	width := max(0, min(int(m.common.cfg.GlamourMaxWidth), m.viewport.Width)) //nolint:gosec
+	maxWidth := int(m.common.cfg.GlamourMaxWidth) //nolint:gosec
+	// The viewport has no size until the first tea.WindowSizeMsg arrives, which
+	// can be after the initial render. Fall back to the known window width so
+	// the content is wrapped to the viewport instead of overflowing.
+	available := m.viewport.Width
+	if available == 0 {
+		available = m.common.width
+	}
+	if available == 0 {
+		available = maxWidth
+	}
+	width := max(0, min(maxWidth, available))
 	if isCode {
 		width = 0
 	}

@@ -172,11 +172,13 @@ func newModel(cfg Config, content string) tea.Model {
 		m.state = stateShowStash
 	} else {
 		cwd, _ := os.Getwd()
+		content, _ := os.ReadFile(path)
 		m.state = stateShowDocument
 		m.pager.currentDocument = markdown{
 			localPath: path,
 			Note:      stripAbsolutePath(path, cwd),
 			Modtime:   info.ModTime(),
+			Body:      string(utils.RemoveFrontmatter(content)),
 		}
 	}
 
