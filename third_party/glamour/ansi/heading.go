@@ -2,10 +2,7 @@ package ansi
 
 import (
 	"bytes"
-	"fmt"
 	"io"
-
-	"github.com/muesli/reflow/wordwrap"
 )
 
 // A HeadingElement is used to render headings.
@@ -64,16 +61,14 @@ func (e *HeadingElement) Finish(w io.Writer, ctx RenderContext) error {
 	rules := bs.Current().Style
 	mw := NewMarginWriter(ctx, w, rules)
 
-	flow := wordwrap.NewWriter(int(bs.Width(ctx))) //nolint: gosec
-	_, err := flow.Write(bs.Current().Block.Bytes())
-	if err != nil {
-		return fmt.Errorf("glamour: error writing bytes: %w", err)
-	}
-	if err := flow.Close(); err != nil {
-		return fmt.Errorf("glamour: error closing flow: %w", err)
-	}
+	flow := textWrap(
+		bs.Current().Block.String(),
+		int(bs.Width(ctx)), //nolint: gosec
+		"-",
+		true,
+	)
 
-	_, err = mw.Write(flow.Bytes())
+	_, err := mw.Write([]byte(flow))
 	if err != nil {
 		return err
 	}

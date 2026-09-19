@@ -2,6 +2,8 @@ package ansi
 
 import (
 	"bytes"
+
+	xansi "github.com/charmbracelet/x/ansi"
 )
 
 // BlockStack is a stack of block elements, used to calculate the current
@@ -29,7 +31,9 @@ func (s *BlockStack) Pop() {
 	*s = stack
 }
 
-// Indent returns the current indentation level of all elements in the stack.
+// Indent returns the current indentation level, in cells, of all elements in
+// the stack. Indentation tokens may span multiple cells, so their width is
+// used rather than the number of indentation units.
 func (s BlockStack) Indent() uint {
 	var i uint
 
@@ -37,7 +41,11 @@ func (s BlockStack) Indent() uint {
 		if v.Style.Indent == nil {
 			continue
 		}
-		i += *v.Style.Indent
+		unit := uint(1)
+		if v.Style.IndentToken != nil {
+			unit = uint(xansi.StringWidth(*v.Style.IndentToken)) //nolint: gosec
+		}
+		i += *v.Style.Indent * unit
 	}
 
 	return i

@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-
-	"github.com/charmbracelet/x/ansi"
 )
 
 // BlockElement provides a render buffer for children of a block element.
@@ -33,10 +31,11 @@ func (e *BlockElement) Finish(w io.Writer, ctx RenderContext) error {
 	bs := ctx.blockStack
 
 	if e.Margin { //nolint: nestif
-		s := ansi.Wordwrap(
+		s := textWrap(
 			bs.Current().Block.String(),
 			int(bs.Width(ctx)), //nolint: gosec
 			" ,.;-+|",
+			true,
 		)
 
 		mw := NewMarginWriter(ctx, w, bs.Current().Style)

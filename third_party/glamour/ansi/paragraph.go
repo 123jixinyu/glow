@@ -2,11 +2,8 @@ package ansi
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"strings"
-
-	"github.com/muesli/reflow/wordwrap"
 )
 
 // A ParagraphElement is used to render individual paragraphs.
@@ -40,14 +37,14 @@ func (e *ParagraphElement) Finish(w io.Writer, ctx RenderContext) error {
 
 	mw := NewMarginWriter(ctx, w, rules)
 	if len(strings.TrimSpace(bs.Current().Block.String())) > 0 {
-		flow := wordwrap.NewWriter(int(bs.Width(ctx))) //nolint: gosec
-		flow.KeepNewlines = ctx.options.PreserveNewLines
-		_, _ = flow.Write(bs.Current().Block.Bytes())
-		if err := flow.Close(); err != nil {
-			return fmt.Errorf("glamour: error closing flow: %w", err)
-		}
+		flow := textWrap(
+			bs.Current().Block.String(),
+			int(bs.Width(ctx)), //nolint: gosec
+			"-",
+			ctx.options.PreserveNewLines,
+		)
 
-		_, err := mw.Write(flow.Bytes())
+		_, err := mw.Write([]byte(flow))
 		if err != nil {
 			return err
 		}
