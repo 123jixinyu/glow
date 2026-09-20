@@ -44,6 +44,8 @@ func (tr *ANSIRenderer) NewElement(node ast.Node, source []byte) Element {
 	switch node.Kind() {
 	// Document
 	case ast.KindDocument:
+		// Column layouts are shared between tables of a single document.
+		ctx.table.layouts = nil
 		e := &BlockElement{
 			Block:  &bytes.Buffer{},
 			Style:  ctx.options.Styles.Document,
