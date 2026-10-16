@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
-	"github.com/charmbracelet/x/ansi"
+	"github.com/charmbracelet/x/cellbuf"
 )
 
 // resize resizes the table to fit the specified width.
@@ -421,14 +421,18 @@ func (r *resizer) extraBorder() int {
 	return 0
 }
 
-// detectContentHeight detects the content height.
+// detectContentHeight detects the content height. It wraps with the same
+// function used to render the cells so the measured height matches the number
+// of lines the renderer actually produces; x/ansi.Wrap disagrees with it for
+// some CJK content and overestimates the height, leaving blank lines in the
+// tallest row.
 func (r *resizer) detectContentHeight(content string, width int) (height int) {
 	if width == 0 {
 		return 1
 	}
 	content = strings.ReplaceAll(content, "\r\n", "\n")
 	for _, line := range strings.Split(content, "\n") {
-		height += strings.Count(ansi.Wrap(line, width, ""), "\n") + 1
+		height += strings.Count(cellbuf.Wrap(line, width, ""), "\n") + 1
 	}
 	return
 }
