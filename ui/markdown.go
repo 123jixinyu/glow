@@ -28,6 +28,15 @@ type markdown struct {
 	Modtime time.Time
 }
 
+// statusNote is the note shown in the pager's status bar. Local documents
+// display their full path so it's clear which file is being previewed.
+func (m markdown) statusNote() string {
+	if m.localPath != "" {
+		return m.localPath
+	}
+	return m.Note
+}
+
 // Generate the value we're doing to filter against.
 func (m *markdown) buildFilterValue() {
 	note, err := normalize(m.Note)

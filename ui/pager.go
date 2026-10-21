@@ -327,14 +327,21 @@ func (m pagerModel) statusBarView(b *strings.Builder) {
 	if showStatusMessage {
 		note = m.statusMessage
 	} else {
-		note = m.currentDocument.Note
+		note = m.currentDocument.statusNote()
 	}
-	note = truncate.StringWithTail(" "+note+" ", uint(max(0, //nolint:gosec
+	maxNoteWidth := uint(max(0, //nolint:gosec
 		m.common.width-
 			ansi.PrintableRuneWidth(logo)-
 			ansi.PrintableRuneWidth(scrollPercent)-
 			ansi.PrintableRuneWidth(helpNote),
-	)), ellipsis)
+	))
+	if showStatusMessage {
+		note = truncate.StringWithTail(" "+note+" ", maxNoteWidth, ellipsis)
+	} else {
+		// Keep the end of the note visible so long paths still show the file
+		// name.
+		note = truncateHead(" "+note+" ", int(maxNoteWidth), ellipsis) //nolint:gosec
+	}
 	if showStatusMessage {
 		note = statusBarMessageStyle(note)
 	} else {
@@ -363,6 +370,36 @@ func (m pagerModel) statusBarView(b *strings.Builder) {
 		scrollPercent,
 		helpNote,
 	)
+}
+
+// truncateHead shortens s to the given width, keeping the end of the string and
+// prefixing it with an ellipsis. Handy for paths, where the file name at the
+// end matters most.
+func truncateHead(s string, width int, prefix string) string {
+	if width <= 0 {
+		return ""
+	}
+	if ansi.PrintableRuneWidth(s) <= width {
+		return s
+	}
+
+	prefixWidth := ansi.PrintableRuneWidth(prefix)
+	if prefixWidth >= width {
+		return prefix
+	}
+
+	runes := []rune(s)
+	w := 0
+	i := len(runes)
+	for i > 0 {
+		rw := runewidth.RuneWidth(runes[i-1])
+		if w+rw > width-prefixWidth {
+			break
+		}
+		w += rw
+		i--
+	}
+	return prefix + string(runes[i:])
 }
 
 func (m pagerModel) helpView() (s string) {
